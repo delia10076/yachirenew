@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>都更管家 - 權權益試算系統</title>
+    <title>都更管家 - 權益試算系統</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root { --primary-color: #2c3e50; --secondary-color: #d35400; --bg-color: #f4f7f6; }
@@ -12,12 +12,12 @@
         .header { text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 15px; margin-bottom: 20px; }
         .project-title { background: #e8f4f8; padding: 12px; border-radius: 6px; font-weight: bold; color: #2980b9; text-align: center; margin-bottom: 20px; border: 1px solid #bde0ef; }
         
-        /* 參數欄位：淡橘色背景，文字改為黑色 */
+        /* 參數欄位：淡橘色背景，文字黑色 */
         .admin-config { background: #fff3e0; padding: 20px; border-radius: 8px; margin-bottom: 20px; font-size: 0.95em; border: 1px dashed #e67e22; }
         .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         .config-item { border-bottom: 1px solid rgba(230, 126, 34, 0.2); padding: 5px 0; color: black; }
         
-        /* 新增：單位確認提醒樣式 */
+        /* 單位確認提醒樣式 */
         .unit-hint { color: #d35400; font-weight: bold; margin-bottom: 15px; padding: 10px; border-left: 4px solid #d35400; background: #fff9f5; font-size: 0.95em; }
 
         .input-group { margin-bottom: 18px; }
@@ -30,7 +30,7 @@
         button:hover { background: #1a252f; }
         .btn-download { background: #27ae60; margin-top: 15px; }
 
-        /* 警告區域：文字改粗體 */
+        /* 警告區域：文字粗體 */
         .warning { background: #fff5f5; color: #c0392b; padding: 15px; border-radius: 8px; border-left: 5px solid #c0392b; margin: 20px 0; font-size: 0.9em; line-height: 1.6; font-weight: bold; }
         
         .result-box { margin-top: 25px; display: none; border: 2px solid #eee; border-radius: 10px; overflow: hidden; background: white; }
@@ -130,13 +130,11 @@ function toPing(val, unit) {
 }
 
 function calculate() {
-    // 177地號 精確參數
     const landEff = 6.743;
     const pubRatio = 0.3;
     const costPerPing = 350000;
     const priceAfter = 800000;
 
-    // 住戶輸入
     const uLand = toPing(parseFloat(document.getElementById('in-land').value), document.getElementById('unit-land').value);
     const uOldIndoor = toPing(parseFloat(document.getElementById('in-indoor').value), document.getElementById('unit-indoor').value);
     const uOldTotal = toPing(parseFloat(document.getElementById('in-total').value), document.getElementById('unit-total').value);
@@ -146,59 +144,8 @@ function calculate() {
         alert("請輸入正確的面積數值"); return;
     }
 
-    // --- 核心計算 (與 Excel 一致) ---
     const targetArea = uLand * landEff;
     const burden = targetArea * costPerPing;
     const offsetPing = burden / priceAfter;
     
-    // 1. 最終分回面積(新權狀面積)
     const finalNewDeed = targetArea - offsetPing;
-    
-    // 2. 新室內面積 (含陽台) = 新權狀 * (1 - 0.3)
-    const newIndoorWithBalcony = finalNewDeed * (1 - pubRatio);
-    
-    // 3. 新室內面積 (不含陽台) = 含陽台 * 0.9 (根據Excel數據回推)
-    const newIndoorPure = newIndoorWithBalcony * 0.9;
-    
-    // 4. 室內面積分回比率 = 新不含陽台 / 原不含陽台
-    const indoorRatio = (newIndoorPure / uOldIndoor) * 100;
-    
-    // 5. 權狀面積分回比率 = 新權狀 / 原總權狀
-    const deedRatio = (finalNewDeed / uOldTotal) * 100;
-    
-    // 6. 更新前價值
-    const valBefore = uOldTotal * priceBefore;
-    
-    // 7. 更新後價值
-    const valAfter = finalNewDeed * priceAfter;
-    
-    // 8. 增值金額
-    const profit = valAfter - valBefore;
-
-    // 填寫結果
-    document.getElementById('res1').innerText = finalNewDeed.toFixed(2) + " 坪";
-    document.getElementById('res2').innerText = newIndoorWithBalcony.toFixed(2) + " 坪";
-    document.getElementById('res3').innerText = newIndoorPure.toFixed(2) + " 坪";
-    document.getElementById('res4').innerText = indoorRatio.toFixed(1) + " %";
-    document.getElementById('res5').innerText = deedRatio.toFixed(1) + " %";
-    document.getElementById('res6').innerText = Math.round(valBefore/10000).toLocaleString() + " 萬元";
-    document.getElementById('res7').innerText = Math.round(valAfter/10000).toLocaleString() + " 萬元";
-    document.getElementById('res8').innerText = Math.round(profit/10000).toLocaleString() + " 萬元";
-
-    document.getElementById('result').style.display = 'block';
-    document.getElementById('btn-dl').style.display = 'block';
-    document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
-}
-
-function takeScreenshot() {
-    const target = document.getElementById('capture-content');
-    html2canvas(target, { scale: 2, backgroundColor: "#f4f7f6" }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = '都更管家-試算報告.png';
-        link.href = canvas.toDataURL();
-        link.click();
-    });
-}
-</script>
-</body>
-</html>
